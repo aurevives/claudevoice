@@ -60,7 +60,7 @@ async def voice_status() -> str:
         # Provider status
         from voice_mcp.providers import PROVIDERS
         status_lines.append("\nProvider Status:")
-        for provider_id in ["openai", "kokoro"]:
+        for provider_id in ["openai", "kokoro", "gemini"]:
             provider = PROVIDERS.get(provider_id)
             if provider:
                 available = await is_provider_available(provider_id)
