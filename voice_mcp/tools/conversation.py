@@ -424,8 +424,8 @@ async def play_audio_feedback(text: str, openai_clients: dict, enabled: Optional
 
 
 def record_audio(duration: float) -> np.ndarray:
-    """Record audio from microphone"""
-    logger.info(f"🎤 Recording audio for {duration}s...")
+    """Record audio from microphone with intelligent silence detection"""
+    logger.info(f"🎤 Recording audio with silence detection (max {duration}s)...")
     if DEBUG:
         try:
             devices = sd.query_devices()
@@ -442,25 +442,67 @@ def record_audio(duration: float) -> np.ndarray:
     original_stderr = sys.stderr
     
     try:
-        samples_to_record = int(duration * SAMPLE_RATE)
-        logger.debug(f"Recording {samples_to_record} samples...")
+        # Configuration for silence detection
+        silence_threshold = 100  # RMS level below which we consider silence
+        silence_duration = 4.0   # Seconds of silence before stopping
+        chunk_size = int(SAMPLE_RATE * 0.1)  # 100ms chunks for real-time processing
         
-        recording = sd.rec(
-            samples_to_record,
+        recording_data = []
+        silence_start = None
+        total_recorded = 0
+        start_time = time.time()
+        
+        logger.debug(f"Starting real-time recording with {chunk_size} samples per chunk...")
+        
+        # Start recording in streaming mode
+        with sd.InputStream(
             samplerate=SAMPLE_RATE,
             channels=CHANNELS,
-            dtype=np.int16
-        )
-        sd.wait()
+            dtype=np.int16,
+            blocksize=chunk_size
+        ) as stream:
+            
+            while total_recorded < duration * SAMPLE_RATE:
+                # Read next chunk
+                chunk, overflowed = stream.read(chunk_size)
+                if overflowed:
+                    logger.warning("Audio buffer overflowed")
+                
+                chunk_flat = chunk.flatten()
+                recording_data.append(chunk_flat)
+                total_recorded += len(chunk_flat)
+                
+                # Calculate RMS for this chunk
+                rms = np.sqrt(np.mean(chunk_flat.astype(float) ** 2))
+                current_time = time.time()
+                
+                if DEBUG and len(recording_data) % 10 == 0:  # Log every second
+                    logger.debug(f"Chunk RMS: {rms:.2f} ({'silence' if rms < silence_threshold else 'audio'})")
+                
+                # Check for silence
+                if rms < silence_threshold:
+                    if silence_start is None:
+                        silence_start = current_time
+                        logger.debug("Silence detected, starting timer...")
+                    elif current_time - silence_start >= silence_duration:
+                        logger.info(f"✓ Stopping after {silence_duration}s of silence")
+                        break
+                else:
+                    # Audio detected, reset silence timer
+                    if silence_start is not None:
+                        logger.debug("Audio resumed, resetting silence timer")
+                    silence_start = None
         
-        flattened = recording.flatten()
-        logger.info(f"✓ Recorded {len(flattened)} samples")
+        # Combine all chunks
+        flattened = np.concatenate(recording_data) if recording_data else np.array([])
+        actual_duration = len(flattened) / SAMPLE_RATE
+        logger.info(f"✓ Recorded {len(flattened)} samples ({actual_duration:.1f}s)")
         
         if DEBUG:
             logger.debug(f"Recording stats - Min: {flattened.min()}, Max: {flattened.max()}, Mean: {flattened.mean():.2f}")
-            # Check if recording contains actual audio (not silence)
-            rms = np.sqrt(np.mean(flattened.astype(float) ** 2))
-            logger.debug(f"RMS level: {rms:.2f} ({'likely silence' if rms < 100 else 'audio detected'})")
+            # Final RMS check
+            final_rms = np.sqrt(np.mean(flattened.astype(float) ** 2))
+            logger.debug(f"Final RMS level: {final_rms:.2f}")
         
         return flattened
         
