@@ -55,6 +55,24 @@ PROVIDERS = {
         "local": False,
         "features": ["cloud", "fast", "reliable"],
         "models": ["whisper-1"],
+    },
+    "gemini": {
+        "id": "gemini",
+        "name": "Gemini AI Studio TTS",
+        "type": "tts",
+        "base_url": "https://generativelanguage.googleapis.com/v1beta",
+        "local": False,
+        "features": ["cloud", "multi-speaker", "emotions", "multi-language", "custom-prompts"],
+        "default_voice": "Zephyr",
+        "voices": [
+            "Aoede", "Callisto", "Charon", "Deimos", "Echo", "Europa",
+            "Fenrir", "Ganymede", "Hera", "Io", "Kore", "Lunara",
+            "Minerva", "Naia", "Nova", "Oberon", "Phobos", "Quorra",
+            "Rhea", "Selene", "Titan", "Umbra", "Vega", "Whisper",
+            "Xara", "Yuki", "Zephyr", "Astra", "Cypher", "Delta"
+        ],
+        "models": ["gemini-2.5-flash-preview-tts", "gemini-2.5-pro-preview-tts"],
+        "default_model": "gemini-2.5-flash-preview-tts",
     }
 }
 

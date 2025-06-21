@@ -42,6 +42,12 @@ async def get_voice_settings() -> str:
     result.append(f"  Auto-start Kokoro: {settings.auto_start_kokoro}")
     result.append(f"  Prefer local: {settings.prefer_local}")
     
+    # Show Gemini-specific settings if using Gemini
+    if settings.tts_provider == "gemini":
+        result.append("\n🤖 GEMINI SETTINGS:")
+        result.append(f"  Model: {settings.gemini_model}")
+        result.append(f"  System prompt: {settings.gemini_system_prompt}")
+    
     if settings.last_updated:
         result.append(f"\n📅 Last updated: {settings.last_updated[:19]}")
     
@@ -53,13 +59,13 @@ async def set_tts_provider(provider: str) -> str:
     Set the TTS (Text-to-Speech) provider.
     
     Args:
-        provider: TTS provider to use ("openai" or "kokoro")
+        provider: TTS provider to use ("openai", "kokoro", or "gemini")
     
     Returns:
         Confirmation message.
     """
-    if provider not in ["openai", "kokoro"]:
-        return "❌ Invalid TTS provider. Use 'openai' or 'kokoro'."
+    if provider not in ["openai", "kokoro", "gemini"]:
+        return "❌ Invalid TTS provider. Use 'openai', 'kokoro', or 'gemini'."
     
     success = settings_manager.update_setting('tts_provider', provider)
     if success:
@@ -204,9 +210,21 @@ async def get_available_voices() -> str:
     for voice in kokoro_voices:
         result.append(f"  • {voice}")
     
+    result.append("\n🤖 GEMINI TTS (AI Studio):")
+    gemini_voices = [
+        "Aoede", "Callisto", "Charon", "Deimos", "Echo", "Europa",
+        "Fenrir", "Ganymede", "Hera", "Io", "Kore", "Lunara",
+        "Minerva", "Naia", "Nova", "Oberon", "Phobos", "Quorra",
+        "Rhea", "Selene", "Titan", "Umbra", "Vega", "Whisper",
+        "Xara", "Yuki", "Zephyr", "Astra", "Cypher", "Delta"
+    ]
+    for voice in gemini_voices:
+        result.append(f"  • {voice}")
+    
     result.append("\n💡 USAGE:")
     result.append("Use set_tts_voice('voice_name') to change voice")
-    result.append("Use set_tts_provider('openai' or 'kokoro') to change provider")
+    result.append("Use set_tts_provider('openai', 'kokoro', or 'gemini') to change provider")
+    result.append("Use set_gemini_model() and set_gemini_prompt() for Gemini customization")
     
     return "\n".join(result)
 
@@ -295,3 +313,72 @@ async def quick_setup_hybrid() -> str:
         
     except Exception as e:
         return f"❌ Failed to setup hybrid configuration: {str(e)}"
+
+@mcp.tool()
+async def set_gemini_model(model: str) -> str:
+    """
+    Set the Gemini TTS model.
+    
+    Args:
+        model: Gemini model to use ("flash" for 2.5-flash or "pro" for 2.5-pro)
+    
+    Returns:
+        Confirmation message.
+    """
+    model_mapping = {
+        "flash": "gemini-2.5-flash-preview-tts",
+        "pro": "gemini-2.5-pro-preview-tts"
+    }
+    
+    if model in model_mapping:
+        full_model = model_mapping[model]
+    elif model in model_mapping.values():
+        full_model = model
+    else:
+        return "❌ Invalid Gemini model. Use 'flash' or 'pro'."
+    
+    success = settings_manager.update_setting('gemini_model', full_model)
+    if success:
+        return f"✅ Gemini model set to: {model} ({full_model})"
+    else:
+        return "❌ Failed to update Gemini model."
+
+@mcp.tool()
+async def set_gemini_prompt(prompt: str) -> str:
+    """
+    Set the Gemini TTS system prompt for voice style control.
+    
+    Args:
+        prompt: System prompt to control voice style, emotion, and characteristics
+    
+    Returns:
+        Confirmation message.
+    """
+    if not prompt or len(prompt.strip()) < 3:
+        return "❌ System prompt must be at least 3 characters long."
+    
+    success = settings_manager.update_setting('gemini_system_prompt', prompt.strip())
+    if success:
+        return f"✅ Gemini system prompt set to: {prompt[:50]}{'...' if len(prompt) > 50 else ''}"
+    else:
+        return "❌ Failed to update Gemini system prompt."
+
+@mcp.tool()
+async def quick_setup_gemini() -> str:
+    """
+    Quick setup for Gemini AI Studio TTS with local Whisper STT.
+    
+    Returns:
+        Setup confirmation message.
+    """
+    try:
+        settings_manager.update_setting('tts_provider', 'gemini')
+        settings_manager.update_setting('tts_voice', 'Zephyr')
+        settings_manager.update_setting('gemini_model', 'gemini-2.5-flash-preview-tts')
+        settings_manager.update_setting('stt_provider', 'local')
+        settings_manager.update_setting('prefer_local', True)
+        
+        return "✅ QUICK SETUP: Gemini TTS + Local Whisper STT configured"
+        
+    except Exception as e:
+        return f"❌ Failed to setup Gemini configuration: {str(e)}"

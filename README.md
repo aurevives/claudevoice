@@ -70,11 +70,49 @@ claude mcp add claudevoice -- uvx --from git+https://github.com/aurevives/claude
 
 ### 🚀 Enhanced Features
 - **Smart Silence Detection**: Automatically detects when you stop speaking and ends recording
-- **Optimized Conversation Flow**: Better integration with Claude Code's interaction patterns
-- **Improved Timing**: Faster response times and more reliable audio processing
+- **Granular Settings System**: Easy-to-use MCP tools for configuration without environment variables
+- **Multiple TTS Providers**: OpenAI, Kokoro (local), and Gemini AI Studio (2025)
+- **Gemini Custom Prompts**: Control voice style with natural language ("Speak cheerfully", "Sound professional")
+- **Flexible Provider Choice**: Mix and match TTS/STT providers (OpenAI TTS + Local Whisper, etc.)
+- **Configurable Silence Timeout**: Adjust how long to wait before stopping recording (2s, 5s, 10s, etc.)
+- **Persistent Settings**: Your preferences are saved and restored automatically
 
-### 🔄 Compared to Original
-This fork maintains full compatibility with the original Voice Mode while adding Claude Code-specific optimizations. All core features and configuration options remain the same.
+### 🔧 Settings Management
+Instead of manually setting environment variables, use these MCP tools:
+- `get_voice_settings`: View current configuration
+- `set_tts_provider`: Choose "openai", "kokoro", or "gemini" for text-to-speech
+- `set_stt_provider`: Choose "openai" or "local" for speech-to-text  
+- `set_silence_timeout`: Configure silence detection (e.g., 2.5 seconds)
+- `set_tts_voice`: Change voice (nova, alloy, af_sky, Zephyr, etc.)
+- `set_gemini_model`: Choose Gemini model ("flash" or "pro")
+- `set_gemini_prompt`: Customize Gemini voice style with natural language
+- `quick_setup_local`: Switch to 100% local processing
+- `quick_setup_cloud`: Switch to 100% cloud processing  
+- `quick_setup_hybrid`: Mix local STT with cloud TTS
+- `quick_setup_gemini`: Use Gemini TTS + local Whisper
+
+### 🔄 How It Works
+1. **One-time setup**: Set your API keys as environment variables:
+   - `OPENAI_API_KEY`: For OpenAI TTS/STT
+   - `GEMINI_API_KEY`: For Gemini AI Studio TTS
+2. **Easy switching**: Use MCP tools to choose providers and settings
+3. **Automatic persistence**: Settings are saved to `~/.voice-mcp/user_settings.json`
+4. **Smart fallback**: Automatically uses available services
+
+### 🎨 Gemini TTS Examples
+```
+# Set creative voice style
+set_gemini_prompt("Speak with enthusiasm and creativity, like a storyteller")
+
+# Professional presentation style  
+set_gemini_prompt("Speak clearly and professionally, suitable for business presentations")
+
+# Casual conversation style
+set_gemini_prompt("Speak naturally and conversationally, like talking to a friend")
+
+# Choose Flash (faster) or Pro (higher quality) model
+set_gemini_model("flash")  # or "pro"
+```
 
 
 ## Tools

@@ -636,7 +636,7 @@ async def livekit_ask_voice_question(question: str, room_name: str = "", timeout
 async def converse(
     message: str,
     wait_for_response: bool = True,
-    listen_duration: float = 15.0,
+    listen_duration: float = 180.0,
     transport: Literal["auto", "local", "livekit"] = "auto",
     room_name: str = "",
     timeout: float = 60.0,
@@ -656,7 +656,7 @@ async def converse(
     Args:
         message: The message to speak
         wait_for_response: Whether to listen for a response after speaking (default: True)
-        listen_duration: How long to listen for response in seconds (default: 15.0)
+        listen_duration: How long to listen for response in seconds (default: 180.0)
         transport: Transport method - "auto" (try LiveKit then local), "local" (direct mic), "livekit" (room-based)
         room_name: LiveKit room name (only for livekit transport, auto-discovered if empty)
         timeout: Maximum wait time for response in seconds (LiveKit only)
@@ -865,7 +865,7 @@ async def converse(
 @mcp.tool()
 async def ask_voice_question(
     question: str,
-    duration: float = 15.0,
+    duration: float = 180.0,
     voice: Optional[str] = None,
     tts_provider: Optional[Literal["openai", "kokoro"]] = None,
     tts_model: Optional[str] = None,
@@ -879,7 +879,7 @@ async def ask_voice_question(
     
     Args:
         question: The question to ask
-        duration: How long to listen for response in seconds (default: 15.0)
+        duration: How long to listen for response in seconds (default: 180.0)
         voice: Override TTS voice (e.g., OpenAI: nova, shimmer; Kokoro: af_sky)
         tts_provider: TTS provider to use - "openai" or "kokoro"
         tts_model: TTS model to use (e.g., tts-1, tts-1-hd, gpt-4o-mini-tts)
@@ -905,7 +905,7 @@ async def ask_voice_question(
 async def voice_chat(
     initial_message: Optional[str] = None,
     max_turns: int = 10,
-    listen_duration: float = 15.0,
+    listen_duration: float = 180.0,
     voice: Optional[str] = None,
     tts_provider: Optional[Literal["openai", "kokoro"]] = None
 ) -> str:
@@ -917,7 +917,7 @@ async def voice_chat(
     Args:
         initial_message: Optional greeting to start the conversation
         max_turns: Maximum number of conversation turns (default: 10)
-        listen_duration: How long to listen each turn in seconds (default: 15.0)
+        listen_duration: How long to listen each turn in seconds (default: 180.0)
         voice: Override TTS voice
         tts_provider: TTS provider to use - "openai" or "kokoro"
     

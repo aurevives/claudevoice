@@ -17,7 +17,7 @@ logger = logging.getLogger("voice-mcp")
 class VoiceSettings:
     """User voice settings with granular control."""
     # TTS Settings
-    tts_provider: str = "openai"  # "openai" or "kokoro"
+    tts_provider: str = "openai"  # "openai", "kokoro", or "gemini"
     tts_voice: str = "nova"       # Voice to use
     tts_model: str = "tts-1"      # TTS model
     
@@ -36,6 +36,10 @@ class VoiceSettings:
     allow_emotions: bool = False   # Enable emotional TTS
     auto_start_kokoro: bool = False # Auto-start Kokoro when needed
     prefer_local: bool = True      # Prefer local services when available
+    
+    # Gemini-specific Settings
+    gemini_system_prompt: str = "Speak naturally and clearly."  # Custom prompt for Gemini TTS style
+    gemini_model: str = "gemini-2.5-flash-preview-tts"  # Gemini model (flash or pro)
     
     # Metadata
     last_updated: str = ""
@@ -123,6 +127,12 @@ class VoiceSettingsManager:
             if 'TTS_BASE_URL' in os.environ:
                 del os.environ['TTS_BASE_URL']
             os.environ['TTS_VOICE'] = settings.tts_voice
+        elif settings.tts_provider == "gemini":
+            # Set Gemini-specific configuration
+            os.environ['TTS_BASE_URL'] = "https://generativelanguage.googleapis.com/v1beta"
+            os.environ['TTS_VOICE'] = settings.tts_voice
+            os.environ['TTS_MODEL'] = settings.gemini_model
+            os.environ['GEMINI_SYSTEM_PROMPT'] = settings.gemini_system_prompt
         
         os.environ['TTS_MODEL'] = settings.tts_model
         
