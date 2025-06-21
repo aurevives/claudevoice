@@ -1,8 +1,10 @@
-# Voice Mode
+# ClaudeVoice
 
-> **Install via:** `uvx voice-mode` | `pip install voice-mode` | [getvoicemode.com](https://getvoicemode.com)
+> **Fork of [Voice Mode](https://github.com/mbailey/voicemode) optimized for Claude Code**
 
-Natural voice conversations for AI assistants. Voice Mode brings human-like voice interactions to Claude, ChatGPT, and other LLMs through the Model Context Protocol (MCP).
+Enhanced voice conversation capabilities specifically designed for Claude Code users. This fork includes improved features like automatic silence detection and optimized conversation flows.
+
+**🔧 This is a specialized fork - for the original project, visit [mbailey/voicemode](https://github.com/mbailey/voicemode)**
 
 ## 🖥️ Compatibility
 
@@ -10,11 +12,12 @@ Natural voice conversations for AI assistants. Voice Mode brings human-like voic
 
 ## ✨ Features
 
-- **🎙️ Voice conversations** with Claude - ask questions and hear responses
+- **🎙️ Natural voice conversations** with Claude Code - ask questions and hear responses
+- **🔇 Smart silence detection** - automatically stops listening when you finish speaking (no more waiting!)
 - **🔄 Multiple transports** - local microphone or LiveKit room-based communication  
 - **🗣️ OpenAI-compatible** - works with any STT/TTS service (local or cloud)
-- **⚡ Real-time** - low-latency voice interactions with automatic transport selection
-- **🔧 MCP Integration** - seamless with Claude Desktop and other MCP clients
+- **⚡ Optimized for Claude Code** - enhanced conversation flows and improved user experience
+- **🔧 MCP Integration** - designed specifically for Claude Code's MCP architecture
 
 ## 🎯 Simple Requirements
 
@@ -26,10 +29,12 @@ Natural voice conversations for AI assistants. Voice Mode brings human-like voic
 ## Quick Start
 
 ```bash
-claude mcp add --scope user voice-mode uvx voice-mode
-export OPENAI_API_KEY=your-openai-key
+# Install ClaudeVoice MCP
+claude mcp add claudevoice --env OPENAI_API_KEY=your-openai-key -- uvx --from git+https://github.com/aurevives/claudevoice claudevoice
+
+# Start using voice with Claude Code
 claude
-> /converse
+# Then use the converse tool in your conversation!
 ```
 
 ## 🎬 Demo
@@ -38,181 +43,57 @@ Watch Voice Mode in action:
 
 [![Voice Mode Demo](https://img.youtube.com/vi/aXRNWvpnwVs/maxresdefault.jpg)](https://www.youtube.com/watch?v=aXRNWvpnwVs)
 
-## Example Usage
+## Example Usage with Claude Code
 
-Once configured, try these prompts with Claude:
+Once configured, start natural voice conversations:
 
-- `"Let's have a voice conversation"`
-- `"Ask me about my day using voice"`
-- `"Tell me a joke"` (Claude will speak and wait for your response)
-- `"Say goodbye"` (Claude will speak without waiting)
+- *"Let's have a voice conversation"*
+- *"Ask me something using voice"*
+- *"Tell me a joke and wait for my response"*
 
-The new `converse` function makes voice interactions more natural - it automatically waits for your response by default.
+**Key improvement:** Smart silence detection means you don't have to wait for timeouts - the conversation flows naturally when you stop speaking!
 
-## Installation
+## Installation for Claude Code
 
 ### Prerequisites
 - Python >= 3.10
 - OpenAI API Key (or compatible service)
+- Claude Code CLI
 
-### Quick Install
-
-```bash
-# Using Claude Code (recommended)
-claude mcp add --scope user voice-mode uvx voice-mode
-
-# Using UV
-uvx voice-mode
-
-# Using pip
-pip install voice-mode
-```
-
-### Manual Configuration for Different Clients
-
-<details>
-<summary><strong>Claude Code (CLI)</strong></summary>
+### Installation Command
 
 ```bash
-claude mcp add voice-mode -- uvx voice-mode
+# Install from this fork
+claude mcp add claudevoice --env OPENAI_API_KEY=your-openai-key -- uvx --from git+https://github.com/aurevives/claudevoice claudevoice
+
+# Alternative: set environment variable first
+export OPENAI_API_KEY=your-openai-key
+claude mcp add claudevoice -- uvx --from git+https://github.com/aurevives/claudevoice claudevoice
 ```
 
-Or with environment variables:
+**⚠️ Note:** This fork is specifically designed for Claude Code. For other MCP clients, use the [original Voice Mode](https://github.com/mbailey/voicemode).
+
+## What's Different in This Fork
+
+### 🚀 Enhanced Features
+- **Smart Silence Detection**: Automatically detects when you stop speaking and ends recording
+- **Optimized Conversation Flow**: Better integration with Claude Code's interaction patterns
+- **Improved Timing**: Faster response times and more reliable audio processing
+
+### 🔄 Compared to Original
+This fork maintains full compatibility with the original Voice Mode while adding Claude Code-specific optimizations. All core features and configuration options remain the same.
+
+## Development
+
+### Fork from Source
 ```bash
-claude mcp add voice-mode --env OPENAI_API_KEY=your-openai-key -- uvx voice-mode
-```
-</details>
-
-<details>
-<summary><strong>Claude Desktop</strong></summary>
-
-**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`  
-**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-
-```json
-{
-  "mcpServers": {
-    "voice-mode": {
-      "command": "uvx",
-      "args": ["voice-mode"],
-      "env": {
-        "OPENAI_API_KEY": "your-openai-key"
-      }
-    }
-  }
-}
-```
-</details>
-
-<details>
-<summary><strong>Cursor</strong></summary>
-
-Add to `~/.cursor/mcp.json`:
-```json
-{
-  "mcpServers": {
-    "voice-mode": {
-      "command": "uvx",
-      "args": ["voice-mode"],
-      "env": {
-        "OPENAI_API_KEY": "your-openai-key"
-      }
-    }
-  }
-}
-```
-</details>
-
-<details>
-<summary><strong>VS Code</strong></summary>
-
-Add to your VS Code MCP config:
-```json
-{
-  "mcpServers": {
-    "voice-mode": {
-      "command": "uvx",
-      "args": ["voice-mode"],
-      "env": {
-        "OPENAI_API_KEY": "your-openai-key"
-      }
-    }
-  }
-}
-```
-</details>
-
-<details>
-<summary><strong>Windsurf</strong></summary>
-
-```json
-{
-  "mcpServers": {
-    "voice-mode": {
-      "command": "uvx",
-      "args": ["voice-mode"],
-      "env": {
-        "OPENAI_API_KEY": "your-openai-key"
-      }
-    }
-  }
-}
-```
-</details>
-
-<details>
-<summary><strong>Zed</strong></summary>
-
-Add to your Zed settings.json:
-```json
-{
-  "context_servers": {
-    "voice-mode": {
-      "command": {
-        "path": "uvx",
-        "args": ["voice-mode"],
-        "env": {
-          "OPENAI_API_KEY": "your-openai-key"
-        }
-      }
-    }
-  }
-}
-```
-</details>
-
-### Alternative Installation Options
-
-<details>
-<summary><strong>Using Docker</strong></summary>
-
-```bash
-docker run -it --rm \
-  -e OPENAI_API_KEY=your-openai-key \
-  --device /dev/snd \
-  -v /tmp/.X11-unix:/tmp/.X11-unix \
-  -e DISPLAY=$DISPLAY \
-  ghcr.io/mbailey/voicemode:latest
-```
-</details>
-
-<details>
-<summary><strong>Using pipx</strong></summary>
-
-```bash
-pipx install voice-mode
-```
-</details>
-
-<details>
-<summary><strong>From source</strong></summary>
-
-```bash
-git clone https://github.com/mbailey/voicemode.git
-cd voicemode
+git clone https://github.com/aurevives/claudevoice.git
+cd claudevoice
 pip install -e .
 ```
-</details>
+
+### Contributing
+This fork focuses on Claude Code optimizations. For general Voice Mode features, contribute to the [upstream project](https://github.com/mbailey/voicemode).
 
 ## Tools
 
@@ -340,17 +221,19 @@ Audio files are saved to: `~/voice-mcp_audio/` with timestamps in the filename.
 
 ## Links
 
+### This Fork
+- **GitHub**: [github.com/aurevives/claudevoice](https://github.com/aurevives/claudevoice)
+- **Claude Code**: [claude.ai/code](https://claude.ai/code)
+
+### Original Project
 - **Website**: [getvoicemode.com](https://getvoicemode.com)
 - **GitHub**: [github.com/mbailey/voicemode](https://github.com/mbailey/voicemode)
 - **PyPI**: [pypi.org/project/voice-mcp](https://pypi.org/project/voice-mcp/)
-- **npm**: [npmjs.com/package/voicemode](https://www.npmjs.com/package/voicemode)
 
 ### Community
-
-- **Discord**: [Join our community](https://discord.gg/gVHPPK5U)
+- **Discord**: [Join Voice Mode community](https://discord.gg/gVHPPK5U)
 - **Twitter/X**: [@getvoicemode](https://twitter.com/getvoicemode)
-- **YouTube**: [@getvoicemode](https://youtube.com/@getvoicemode)
 
 ## License
 
-MIT - A [Failmode](https://failmode.com) Project
+MIT - Fork of [Voice Mode](https://github.com/mbailey/voicemode) (MIT License by [Failmode](https://failmode.com))
