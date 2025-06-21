@@ -155,6 +155,10 @@ if DEBUG:
 # Create MCP server
 mcp = FastMCP("Voice MCP")
 
+# Import all tools to register them with the MCP server
+# This triggers the auto-import in tools/__init__.py
+from . import tools
+
 # Audio configuration
 SAMPLE_RATE = 44100
 CHANNELS = 1
@@ -709,7 +713,7 @@ async def livekit_ask_voice_question(question: str, room_name: str = "", timeout
 async def converse(
     message: str,
     wait_for_response: bool = True,
-    listen_duration: float = 10.0,
+    listen_duration: float = 180.0,
     transport: Literal["auto", "local", "livekit"] = "auto",
     room_name: str = "",
     timeout: float = 60.0,
@@ -731,7 +735,7 @@ async def converse(
     Args:
         message: The message to speak
         wait_for_response: Whether to listen for a response after speaking (default: True)
-        listen_duration: How long to listen for response in seconds (default: 10.0)
+        listen_duration: How long to listen for response in seconds (default: 180.0)
         transport: Transport method - "auto" (try LiveKit then local), "local" (direct mic), "livekit" (room-based)
         room_name: LiveKit room name (only for livekit transport, auto-discovered if empty)
         timeout: Maximum wait time for response in seconds (LiveKit only)

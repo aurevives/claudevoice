@@ -4,7 +4,7 @@ Settings management tools for Voice MCP.
 
 import logging
 from typing import Optional, List
-from voice_mcp.server import mcp
+from voice_mcp.server_new import mcp
 from voice_mcp.settings import settings_manager
 
 logger = logging.getLogger("voice-mcp")
