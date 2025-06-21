@@ -69,6 +69,178 @@ def get_openai_clients(api_key: str, stt_base_url: str, tts_base_url: str) -> di
     }
 
 
+async def text_to_speech_gemini(
+    text: str,
+    tts_model: str,
+    tts_voice: str,
+    debug: bool = False,
+    debug_dir: Optional[Path] = None,
+    save_audio: bool = False,
+    audio_dir: Optional[Path] = None,
+    instructions: Optional[str] = None
+) -> tuple[bool, Optional[dict]]:
+    """Convert text to speech using Gemini TTS and play it.
+    
+    Returns:
+        tuple: (success: bool, metrics: dict) where metrics contains 'generation' and 'playback' times
+    """
+    import time
+    
+    logger.info(f"Gemini TTS: Converting text to speech: '{text[:100]}{'...' if len(text) > 100 else ''}'")
+    if debug:
+        logger.debug(f"Gemini TTS full text: {text}")
+        logger.debug(f"Gemini TTS config - Model: {tts_model}, Voice: {tts_voice}")
+    
+    metrics = {}
+    
+    try:
+        # Import and create Gemini TTS provider
+        from voice_mcp.providers import GeminiTTSProvider
+        gemini_provider = GeminiTTSProvider()
+        
+        # Track generation time
+        generation_start = time.perf_counter()
+        
+        # Generate speech using Gemini
+        audio_file_path = await gemini_provider.generate_speech(
+            text=text,
+            voice=tts_voice,
+            model=tts_model,
+            system_prompt=instructions  # Use instructions as system prompt for Gemini
+        )
+        
+        metrics['generation'] = time.perf_counter() - generation_start
+        logger.debug(f"Gemini TTS generated audio file: {audio_file_path}")
+        
+        # Read the generated audio file
+        with open(audio_file_path, 'rb') as f:
+            response_content = f.read()
+        
+        # Save debug file if enabled
+        if debug and debug_dir:
+            debug_path = save_debug_file(response_content, "gemini-tts-output", "wav", debug_dir, debug)
+            if debug_path:
+                logger.info(f"Gemini TTS debug audio saved to: {debug_path}")
+        
+        # Save audio file if audio saving is enabled
+        if save_audio and audio_dir:
+            audio_path = save_debug_file(response_content, "gemini-tts", "wav", audio_dir, True)
+            if audio_path:
+                logger.info(f"Gemini TTS audio saved to: {audio_path}")
+        
+        # Play audio
+        playback_start = time.perf_counter()
+        
+        try:
+            # Load WAV audio directly
+            logger.debug("Loading Gemini WAV audio...")
+            audio = AudioSegment.from_wav(audio_file_path)
+            logger.debug(f"Audio loaded - Duration: {len(audio)}ms, Channels: {audio.channels}, Frame rate: {audio.frame_rate}")
+            
+            # Convert to numpy array
+            logger.debug("Converting to numpy array...")
+            samples = np.array(audio.get_array_of_samples())
+            if audio.channels == 2:
+                samples = samples.reshape((-1, 2))
+                logger.debug("Reshaped for stereo")
+            
+            # Convert to float32 for sounddevice
+            samples = samples.astype(np.float32) / 32767.0
+            logger.debug(f"Audio converted to float32, shape: {samples.shape}")
+            
+            # Try to ensure sounddevice doesn't interfere with stdout/stderr
+            try:
+                import sounddevice as sd
+                import sys
+                
+                # Save current stdio state
+                original_stdin = sys.stdin
+                original_stdout = sys.stdout
+                original_stderr = sys.stderr
+                
+                try:
+                    # Force initialization before playing
+                    sd.default.samplerate = audio.frame_rate
+                    sd.default.channels = audio.channels
+                    
+                    # Add 100ms of silence at the beginning to prevent clipping
+                    silence_duration = 0.1  # seconds
+                    silence_samples = int(audio.frame_rate * silence_duration)
+                    # Match the shape of the samples array exactly
+                    if samples.ndim == 1:
+                        silence = np.zeros(silence_samples, dtype=np.float32)
+                        samples_with_buffer = np.concatenate([silence, samples])
+                    else:
+                        silence = np.zeros((silence_samples, samples.shape[1]), dtype=np.float32)
+                        samples_with_buffer = np.vstack([silence, samples])
+                    
+                    sd.play(samples_with_buffer, audio.frame_rate)
+                    sd.wait()
+                    
+                    logger.info("✓ Gemini TTS played successfully")
+                    metrics['playback'] = time.perf_counter() - playback_start
+                    
+                    # Clean up the temporary file
+                    os.unlink(audio_file_path)
+                    return True, metrics
+                finally:
+                    # Restore stdio if it was changed
+                    if sys.stdin != original_stdin:
+                        sys.stdin = original_stdin
+                    if sys.stdout != original_stdout:
+                        sys.stdout = original_stdout
+                    if sys.stderr != original_stderr:
+                        sys.stderr = original_stderr
+            except Exception as sd_error:
+                logger.error(f"Gemini TTS Sounddevice playback failed: {sd_error}")
+                
+                # Fallback to file-based playback methods
+                logger.info("Attempting alternative playback methods...")
+                
+                # Try using PyDub's playback (requires simpleaudio or pyaudio)
+                try:
+                    from pydub.playback import play as pydub_play
+                    logger.debug("Using PyDub playback...")
+                    pydub_play(audio)
+                    logger.info("✓ Gemini TTS played successfully with PyDub")
+                    metrics['playback'] = time.perf_counter() - playback_start
+                    os.unlink(audio_file_path)
+                    return True, metrics
+                except Exception as pydub_error:
+                    logger.error(f"PyDub playback failed: {pydub_error}")
+                
+                # Last resort: save to user's home directory for manual playback
+                try:
+                    fallback_path = Path.home() / f"voice-mcp-gemini-{datetime.now().strftime('%Y%m%d_%H%M%S')}.wav"
+                    import shutil
+                    shutil.copy(audio_file_path, fallback_path)
+                    logger.warning(f"Gemini audio saved to {fallback_path} for manual playback")
+                    os.unlink(audio_file_path)
+                    metrics['playback'] = time.perf_counter() - playback_start
+                    return False, metrics
+                except Exception as save_error:
+                    logger.error(f"Failed to save Gemini audio file: {save_error}")
+                    os.unlink(audio_file_path)
+                    metrics['playback'] = time.perf_counter() - playback_start
+                    return False, metrics
+            
+        except Exception as e:
+            logger.error(f"Error playing Gemini audio: {e}")
+            logger.error(f"Audio format - Channels: {audio.channels if 'audio' in locals() else 'unknown'}, Frame rate: {audio.frame_rate if 'audio' in locals() else 'unknown'}")
+            logger.error(f"Samples shape: {samples.shape if 'samples' in locals() else 'unknown'}")
+            
+            # Clean up the temporary file
+            if audio_file_path and os.path.exists(audio_file_path):
+                os.unlink(audio_file_path)
+            metrics['playback'] = time.perf_counter() - playback_start
+            return False, metrics
+                    
+    except Exception as e:
+        logger.error(f"Gemini TTS failed: {e}")
+        logger.error(f"Gemini TTS config when error occurred - Model: {tts_model}, Voice: {tts_voice}")
+        return False, metrics
+
+
 async def text_to_speech(
     text: str,
     openai_clients: dict,
@@ -80,7 +252,8 @@ async def text_to_speech(
     save_audio: bool = False,
     audio_dir: Optional[Path] = None,
     client_key: str = 'tts',
-    instructions: Optional[str] = None
+    instructions: Optional[str] = None,
+    provider: Optional[str] = None
 ) -> tuple[bool, Optional[dict]]:
     """Convert text to speech and play it.
     
@@ -88,6 +261,20 @@ async def text_to_speech(
         tuple: (success: bool, metrics: dict) where metrics contains 'generation' and 'playback' times
     """
     import time
+    
+    # Route to Gemini TTS if using Gemini provider
+    if provider == 'gemini' or client_key == 'gemini':
+        logger.info("Routing to Gemini TTS provider")
+        return await text_to_speech_gemini(
+            text=text,
+            tts_model=tts_model,
+            tts_voice=tts_voice,
+            debug=debug,
+            debug_dir=debug_dir,
+            save_audio=save_audio,
+            audio_dir=audio_dir,
+            instructions=instructions
+        )
     
     logger.info(f"TTS: Converting text to speech: '{text[:100]}{'...' if len(text) > 100 else ''}'")
     if debug:

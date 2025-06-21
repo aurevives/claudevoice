@@ -165,14 +165,17 @@ async def get_tts_config(provider: Optional[str] = None, voice: Optional[str] = 
     
     # Default to environment configuration
     if provider is None:
-        # If TTS_BASE_URL is set to something other than OpenAI, assume Kokoro
+        # If TTS_BASE_URL is set to something other than OpenAI, check for Gemini or Kokoro
         if TTS_BASE_URL and "openai.com" not in TTS_BASE_URL:
-            provider = "kokoro"
+            if "generativelanguage.googleapis.com" in TTS_BASE_URL:
+                provider = "gemini"
+            else:
+                provider = "kokoro"
         else:
             provider = "openai"
     
     # Validate instructions usage
-    if instructions and model != "gpt-4o-mini-tts":
+    if instructions and model not in ["gpt-4o-mini-tts"]:
         logger.warning(f"Instructions parameter is only supported with gpt-4o-mini-tts model, ignoring for model: {model}")
         instructions = None
     
@@ -191,7 +194,18 @@ async def get_tts_config(provider: Optional[str] = None, voice: Optional[str] = 
             'base_url': provider_info.get("base_url", KOKORO_TTS_BASE_URL),
             'model': model or provider_info["models"][0],
             'voice': voice or provider_info["default_voice"],
-            'instructions': None  # Kokoro doesn't support instructions
+            'instructions': None,  # Kokoro doesn't support instructions
+            'provider': 'kokoro'
+        }
+    elif provider == "gemini":
+        # Gemini uses a different API, return special config
+        return {
+            'client_key': 'gemini',  # Special marker for Gemini
+            'base_url': provider_info.get("base_url"),
+            'model': model or provider_info.get("default_model", "gemini-2.5-flash-preview-tts"),
+            'voice': voice or provider_info["default_voice"],
+            'instructions': instructions,  # Gemini supports custom prompts via system_prompt
+            'provider': 'gemini'
         }
     else:  # openai
         # Use openai-specific client if available, otherwise use default
@@ -202,7 +216,8 @@ async def get_tts_config(provider: Optional[str] = None, voice: Optional[str] = 
             'base_url': provider_info.get("base_url", OPENAI_TTS_BASE_URL),
             'model': model or TTS_MODEL,  # Use provided model or default
             'voice': voice or provider_info.get("default_voice", TTS_VOICE),
-            'instructions': instructions  # Pass through instructions for OpenAI
+            'instructions': instructions,  # Pass through instructions for OpenAI
+            'provider': 'openai'
         }
 
 
@@ -416,7 +431,8 @@ async def play_audio_feedback(text: str, openai_clients: dict, enabled: Optional
                 save_audio=False,  # Don't save feedback sounds
                 audio_dir=None,
                 client_key='tts',
-                instructions=instructions
+                instructions=instructions,
+                provider='openai'  # Audio feedback uses OpenAI for consistency
             )
     except Exception as e:
         logger.debug(f"Audio feedback failed: {e}")
@@ -641,7 +657,7 @@ async def converse(
     room_name: str = "",
     timeout: float = 60.0,
     voice: Optional[str] = None,
-    tts_provider: Optional[Literal["openai", "kokoro"]] = None,
+    tts_provider: Optional[Literal["openai", "kokoro", "gemini"]] = None,
     tts_model: Optional[str] = None,
     tts_instructions: Optional[str] = None,
     audio_feedback: Optional[bool] = None,
@@ -716,7 +732,8 @@ async def converse(
                         save_audio=SAVE_AUDIO,
                         audio_dir=AUDIO_DIR if SAVE_AUDIO else None,
                         client_key=tts_config['client_key'],
-                        instructions=tts_config.get('instructions')
+                        instructions=tts_config.get('instructions'),
+                        provider=tts_config.get('provider')
                     )
                     
                 # Include timing info if available
@@ -768,7 +785,8 @@ async def converse(
                         save_audio=SAVE_AUDIO,
                         audio_dir=AUDIO_DIR if SAVE_AUDIO else None,
                         client_key=tts_config['client_key'],
-                        instructions=tts_config.get('instructions')
+                        instructions=tts_config.get('instructions'),
+                        provider=tts_config.get('provider')
                     )
                     
                     # Add TTS sub-metrics
@@ -867,7 +885,7 @@ async def ask_voice_question(
     question: str,
     duration: float = 180.0,
     voice: Optional[str] = None,
-    tts_provider: Optional[Literal["openai", "kokoro"]] = None,
+    tts_provider: Optional[Literal["openai", "kokoro", "gemini"]] = None,
     tts_model: Optional[str] = None,
     tts_instructions: Optional[str] = None
 ) -> str:
@@ -907,7 +925,7 @@ async def voice_chat(
     max_turns: int = 10,
     listen_duration: float = 180.0,
     voice: Optional[str] = None,
-    tts_provider: Optional[Literal["openai", "kokoro"]] = None
+    tts_provider: Optional[Literal["openai", "kokoro", "gemini"]] = None
 ) -> str:
     """Start an interactive voice chat session.
     

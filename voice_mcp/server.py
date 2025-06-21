@@ -718,7 +718,7 @@ async def converse(
     room_name: str = "",
     timeout: float = 60.0,
     voice: Optional[str] = None,
-    tts_provider: Optional[Literal["openai", "kokoro"]] = None,
+    tts_provider: Optional[Literal["openai", "kokoro", "gemini"]] = None,
     tts_model: Optional[str] = None,
     tts_instructions: Optional[str] = None,
     audio_feedback: Optional[bool] = None,
