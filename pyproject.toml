@@ -15,9 +15,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "voice-mode"
+name = "claudevoice"
 dynamic = ["version"]
-description = "VoiceMode - Voice interaction capabilities for AI assistants (formerly voice-mcp)"
+description = "ClaudeVoice - Voice interaction capabilities for Claude AI assistant"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
@@ -76,6 +76,7 @@ Repository = "https://github.com/mbailey/voicemode"
 Issues = "https://github.com/mbailey/voicemode/issues"
 
 [project.scripts]
+claudevoice = "voice_mcp.cli:voice_mode"
 voice-mode = "voice_mcp.cli:voice_mode"
 voicemode = "voice_mcp.cli:voice_mode"
 voice-mcp = "voice_mcp.cli:voice_mcp"

@@ -444,7 +444,7 @@ def record_audio(duration: float) -> np.ndarray:
     try:
         # Configuration for silence detection
         silence_threshold = 100  # RMS level below which we consider silence
-        silence_duration = 4.0   # Seconds of silence before stopping
+        silence_duration = 2.5   # Seconds of silence before stopping
         chunk_size = int(SAMPLE_RATE * 0.1)  # 100ms chunks for real-time processing
         
         recording_data = []
