@@ -148,7 +148,23 @@ async def startup_initialization():
 
 async def get_tts_config(provider: Optional[str] = None, voice: Optional[str] = None, model: Optional[str] = None, instructions: Optional[str] = None):
     """Get TTS configuration based on provider selection"""
-    # Auto-detect provider based on voice if not specified
+    # Load user settings if parameters not provided
+    if provider is None or voice is None or model is None:
+        from voice_mcp.settings import VoiceSettingsManager
+        settings_manager = VoiceSettingsManager()
+        user_settings = settings_manager.load_settings()
+        
+        # Use saved settings as defaults
+        if provider is None:
+            provider = user_settings.tts_provider
+        if voice is None:
+            voice = user_settings.tts_voice
+        if model is None and provider == "gemini":
+            model = user_settings.gemini_model
+        if instructions is None and provider == "gemini":
+            instructions = user_settings.gemini_system_prompt
+    
+    # Auto-detect provider based on voice if still not specified
     if provider is None and voice:
         provider_info = get_provider_by_voice(voice)
         if provider_info:

@@ -68,6 +68,13 @@ async def set_tts_provider(provider: str) -> str:
         return "❌ Invalid TTS provider. Use 'openai', 'kokoro', or 'gemini'."
     
     success = settings_manager.update_setting('tts_provider', provider)
+    
+    # Auto-update model when switching to Gemini
+    if success and provider == "gemini":
+        current_settings = settings_manager.load_settings()
+        if current_settings.tts_model in ["tts-1", "tts-1-hd", "gpt-4o-mini-tts"]:  # OpenAI models
+            settings_manager.update_setting('tts_model', current_settings.gemini_model)
+    
     if success:
         return f"✅ TTS provider set to: {provider}"
     else:

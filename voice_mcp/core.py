@@ -263,8 +263,9 @@ async def text_to_speech(
     import time
     
     # Route to Gemini TTS if using Gemini provider
+    logger.info(f"TTS routing check - provider: {provider}, client_key: {client_key}")
     if provider == 'gemini' or client_key == 'gemini':
-        logger.info("Routing to Gemini TTS provider")
+        logger.info("✅ Routing to Gemini TTS provider")
         return await text_to_speech_gemini(
             text=text,
             tts_model=tts_model,
