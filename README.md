@@ -93,8 +93,10 @@ Instead of manually setting environment variables, use these MCP tools:
 
 ### 🔄 How It Works
 1. **One-time setup**: Set your API keys as environment variables:
-   - `OPENAI_API_KEY`: For OpenAI TTS/STT
-   - `GEMINI_API_KEY`: For Gemini AI Studio TTS
+   ```bash
+   export OPENAI_API_KEY="your-openai-key"
+   export GEMINI_API_KEY="your-gemini-key"
+   ```
 2. **Easy switching**: Use MCP tools to choose providers and settings
 3. **Automatic persistence**: Settings are saved to `~/.voice-mcp/user_settings.json`
 4. **Smart fallback**: Automatically uses available services
