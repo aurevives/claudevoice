@@ -4,8 +4,6 @@
 
 Enhanced voice conversation capabilities specifically designed for Claude Code users. This fork includes improved features like automatic silence detection and optimized conversation flows.
 
-**🔧 This is a specialized fork - for the original project, visit [mbailey/voicemode](https://github.com/mbailey/voicemode)**
-
 ## 🖥️ Compatibility
 
 **Runs on:** Linux • macOS • Windows (WSL) | **Python:** 3.10+ | **Tested:** Ubuntu 24.04 LTS, Fedora 42
@@ -37,11 +35,6 @@ claude
 # Then use the converse tool in your conversation!
 ```
 
-## 🎬 Demo
-
-Watch Voice Mode in action:
-
-[![Voice Mode Demo](https://img.youtube.com/vi/aXRNWvpnwVs/maxresdefault.jpg)](https://www.youtube.com/watch?v=aXRNWvpnwVs)
 
 ## Example Usage with Claude Code
 
@@ -83,17 +76,6 @@ claude mcp add claudevoice -- uvx --from git+https://github.com/aurevives/claude
 ### 🔄 Compared to Original
 This fork maintains full compatibility with the original Voice Mode while adding Claude Code-specific optimizations. All core features and configuration options remain the same.
 
-## Development
-
-### Fork from Source
-```bash
-git clone https://github.com/aurevives/claudevoice.git
-cd claudevoice
-pip install -e .
-```
-
-### Contributing
-This fork focuses on Claude Code optimizations. For general Voice Mode features, contribute to the [upstream project](https://github.com/mbailey/voicemode).
 
 ## Tools
 
@@ -219,20 +201,6 @@ export VOICE_MCP_SAVE_AUDIO=true
 
 Audio files are saved to: `~/voice-mcp_audio/` with timestamps in the filename.
 
-## Links
-
-### This Fork
-- **GitHub**: [github.com/aurevives/claudevoice](https://github.com/aurevives/claudevoice)
-- **Claude Code**: [claude.ai/code](https://claude.ai/code)
-
-### Original Project
-- **Website**: [getvoicemode.com](https://getvoicemode.com)
-- **GitHub**: [github.com/mbailey/voicemode](https://github.com/mbailey/voicemode)
-- **PyPI**: [pypi.org/project/voice-mcp](https://pypi.org/project/voice-mcp/)
-
-### Community
-- **Discord**: [Join Voice Mode community](https://discord.gg/gVHPPK5U)
-- **Twitter/X**: [@getvoicemode](https://twitter.com/getvoicemode)
 
 ## License
 
